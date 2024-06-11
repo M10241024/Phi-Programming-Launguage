@@ -23,7 +23,7 @@ Some functions are called operators which means that they need the first argumen
 What actualy happens is that  the first operand recognizes that you pass in an operator and calls it in reverse order: `f(op)` == `op(f)`.
 ```
 function f(a) {
-    if a is Operator {
+    if a is operator {
         return a(f)
     }
     ...
@@ -109,16 +109,20 @@ var a: number = true  // true converts to 1
 a = "abc"             // "abc" cannot be converted into a number, throws an error
 ```
 
-You can use `var` to create members of another object: `var dog.age: number = 3`.
+Using `var` again after creating a variable will do nothing or asign a new value an existing variable:
+```
+var a: number      // a is 0
+var a: number = 5  // a is now 5
+var a: number      // does nothing, a is still 5
+var a: bool        // a is now converted to bool (when converting 5 it gives true)
+```
 
-Use `delete` to delete a variable:
+You can use `var` to create members of another object:
 ```
-var a: number = 5
-var a: number = 6  // error: this variable already exists
-delete a
-a = 6              // error: there is no variable `a`
-var a: number = 6  // no error
+var dog.age: number = 3
 ```
+
+All data types are inmutable and creating a variable just means copying them.
 
 Everything is a variable.
 
@@ -159,7 +163,7 @@ const dog: Dog = _.new("Pi")
 dog.name = "Darwin"          // throws an error
 ```
 
-You can also use `const` to convert a variable to a constant:
+You can also use `const` to change from variable to a constant:
 ```
 var a: number = 5
 a = 6
@@ -172,7 +176,8 @@ Use `ref` to create a reference:
 ```
 var a: number = 5
 ref b: number = a
-var d: Reference<number> = a
+// above line is equivalent to
+var b: Reference<number> = a
 ```
 
 When you do anything with the reference, the orginal variable also changes and vice-versa:
@@ -181,10 +186,8 @@ var a: number = 5
 ref b: number = a
 b = 6              // a also changes
 a = 7              // b also changes
-var c: number = b  // c is independent
+var c: number = b  // c is independent and doesn't change with a and b
 ```
-
-Using `delete` on a reference will also delete the orginal variable, so use `delete_ref` instead. `delete_ref` can't be used on a regular variable, only references.
 
 In most cases using a reference is the same as typing the orginal variable name.
 
@@ -193,18 +196,18 @@ Use `function` to create a function:
 ```
 function f() {}
 // is equivalent to
-const f: function = function() {}
+var f: function = function() {}
 ```
-Use `var function` insetead of just `function` to create a function thet can be overriden:
+Use `const function` insetead of just `function` to create a function that can't be overriden:
 ```
 function f() {}
 // is equivalent to
-const f: function = function() {}
+var f: function = function() {}
 
 // but
-var function g() {}
+const function g() {}
 // is equivalent to
-var g: function = function() {}
+const g: function = function() {}
 ```
 
 Use names in the parentisis for arguments. Use `:` to signify the type of an argument and `=` for the default value:
@@ -221,6 +224,13 @@ function add(a: number, b: number): number {
 
 All functions return `null` by default.
 
+You can create an operator with `operator` instead of `function`. Operators work the same, bat can be called with the first argument before the function instead of after it.
+
+You can change the operator/function precedence with `f.precedence = ...`. Higher value means it will be evaluated first.
+
+Everything is a function.
+
+## Variable arguments
 Use `...` after a comma for functions with potentialy infinite argument count:
 ```
 function sum(numbers: set<number> = [], ...): number {
@@ -232,6 +242,14 @@ function sum(numbers: set<number> = [], ...): number {
 }
 ```
 
+Rember that when not all arguments are provided, the function just waits for more arguments so functions with variable argument counts bechave differently depending on what type they are assigned to:
+```
+var a: number = sum(1, 2, 3)    // a is 1 + 2 + 3 == 6
+var b: function = sum(1, 2, 3)  // b is be a function that expects more arguments
+var c: number = a(4, 5, 6)      // c uses function a which had some numbers stored already, so it returns 1 + 2 + 3 + 4 + 5 + 6 = 21
+```
+
+## One argument
 In reality every function has just one argument:
 ```
 function(a, b, c) {
@@ -257,7 +275,107 @@ function(type: Any) {
 ```
 This also how `...` works internaly.
 
-Everything is a function.
+Functions with no arguments actualy expect a single argument of type `null` (which is what `()` evaluates to).
+```
+function() {}
+// is equivalent to
+function(_: null) {}
+```
 
 ## Pure functions
-...
+Pure functions are functions that:
+1. Don't affect the rest of the program other than returning a value.
+2. Their output depends only on their input.
+
+All functions in Phi are pure functions.
+
+This means that when you are creating a function all variables created outside of the function work like constants:
+```
+var a: number = 5
+function f() {
+    return a
+}
+f()  // returns 5
+a = 6
+f()  // still returns 5
+```
+
+It also means that functions can't change variables created outside of the function:
+```
+var a: number = 5
+function f() {
+    a += 1  // throws an error
+}
+```
+
+So in order to have methods that act on objects in-place you need to use `=` or `.=`:
+```
+var a: list<number> = [1, 2, 3]
+list            // is [1, 2, 3]
+list.remove(2)  // returns a new list [1, 3], but doesn't modify the orginal
+list            // still [1, 2, 3]
+// to remove an element you need to use `=`
+list = list.remove(2)  // or
+list = _.remove(2)     // or
+list.=remove(2)
+
+list // will now be [1, 3]
+```
+
+But everything is a function, including `=` so how does it work? The answer is: it takes the rest of the code as an argument and modifies the variable there:
+```
+operator ."=" (variable: phi.Variable, value: Any, the_rest_of_the_code: TheRestOfTheFunction, ...): Any {
+    var new_variable_set: Any = variable.parent
+    new_variable_set.=set_variable(variable)
+    return the_rest_of_the_function(new_variable_set)
+}
+// I still have to decide how exactly will it work
+```
+
+## Flag arguments
+You can use `Flags` type to capture a list of flags:
+```
+function f(flags: Flags, ...): list<str> {
+    return flags
+}
+f(a, b, c) // returns ["a", "b", "c"]
+```
+
+`Flags` can also accept names of flags inside `<>`, and will use them to create boolean arguments:
+```
+function f(flags: Flags<a, b, c>, ...) {
+    return [a, b, c]
+}
+
+f(a, c) // returns [true, false, true]
+```
+
+Here is a more practical example:
+```
+function open_file(path: string, flags: Flags<read, write, create, erase>, ...) {
+    if read {
+        print "The file is readable"
+    }
+    if write {
+        print "The file is writeable"
+    }
+    if create {
+        print "If there is no file with this name, create a new one"
+    }
+    if erase {
+        print "Erase the contents of the file"
+    }
+}
+
+open_file("file.txt", read, create) // will print "The file is readable" and "If there is no file with this name, create a new one", but nothing else.
+```
+
+## Code blocks
+`{}` can be used to create a function directly:
+```
+function f() {`some code`}
+// is equivalent to
+var f: function = {`some code`}
+```
+
+`{}` by default gives `CodeBlock` object instead of `function` which works a little bit differently. // INCLUDE EXAMPLES
