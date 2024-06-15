@@ -345,3 +345,33 @@ function open_file(path: string, flags: Flags<read, write, create, erase>, ...) 
 
 open_file("file.txt", read, create) // will print "The file is readable" and "If there is no file with this name, create a new one", but nothing else.
 ```
+
+## Recursion
+
+If you tried to run
+```
+function factorial(n: int): int {
+    if n == 0 {
+        return 1
+    } else {
+        return n * factorial(n - 1)
+    }
+}
+
+factorial(5)
+```
+
+You would get en error: `Line 4: "return n * factorial(n - 1)" - "factorial" is not defined`, because the function is only created *after* the last `}`.
+
+In order to use recursion you need to use `rec` and add an extra argument to the function:
+```
+function factorial(f: function, n: int): int {
+    if n == 0 {
+        return 1
+    } else {
+        return n * f(n - 1)
+    }
+}
+
+factorial(5) // 120
+```
