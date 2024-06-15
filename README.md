@@ -88,7 +88,7 @@ var a: number = 5
 a = 6
 a += 7
 a++
-a.=absolute_value()
+a.=absolute_value
 ```
 
 Use `_` to reference old value of the variable:
@@ -123,25 +123,7 @@ All data types are inmutable and creating a variable just means copying them.
 Everything is a variable.
 
 ## Setters and getters
-Pass extra arguments to `var` in order to use setters and getters. The exact details are subject to change.
-```
-var a: number (
-    set = function(this_scope, old_value, new_value) {...},
-        // called when `a = ...` is used, should return the new value
-    
-    get = function(this_scope, old_value, new_value) {...},
-        // called when `a` is used, should return the value you get
-    
-    on_set = function(this_scope, old_value, new_value) {...},
-        // called when `a = ...` is used, should return `this_scope` or `null`
-    
-    on_get = function(this_scope, old_value, new_value) {...},
-        // called when `a` is used, should return `this_scope` or `null`
-    
-    on_change = function(this_scope, old_value, new_value) {...},
-        // called when `a = ...` is used and the new value is different to the previous value, should return `this_scope` or `null`
-)
-```
+...
 
 ## Constants
 Use `const` instead of `var` for a constant:
@@ -220,7 +202,7 @@ function add(a: number, b: number): number {
 
 All functions return `null` by default.
 
-Functions whith zero arguments don't actualy exist - you can create one but it will just evaluate to its return value:
+Functions whith zero arguments don't actualy exist - you can create one but it will just equivalent to its return value:
 ```
 function() {return 5} == 5
 ```
