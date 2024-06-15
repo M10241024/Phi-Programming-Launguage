@@ -14,8 +14,6 @@ var g = f(a)
 g(b) // same as f(a, b)
 ```
 
-You can use `var f_1 = {f(a, b)}` to pass all the arguments without actualy calling the function.
-
 You can use `f(arg_2 = b, arg_1 = a)` to pass arguments out of order.
 
 Some functions are called operators which means that they need the first argument to be on the left: `(a)op(b)`. Operators can still be called normaly: `op(a, b)`.
@@ -56,8 +54,6 @@ This is also how pharenteses work internaly:
 ```
 
 User created functions have the highest precedence except for parentheses.
-
-Use `f.call_list([a], {"arg_2" = b})` to use the values from list/dictionary as arguments.
 
 Everything is a function.
 
@@ -194,20 +190,20 @@ In most cases using a reference is the same as typing the orginal variable name.
 # Functions
 Use `function` to create a function:
 ```
-function f() {}
+function f(arg) {}
 // is equivalent to
-var f: function = function() {}
+var f: function = function(arg) {}
 ```
 Use `const function` insetead of just `function` to create a function that can't be overriden:
 ```
-function f() {}
+function f(arg) {}
 // is equivalent to
-var f: function = function() {}
+var f: function = function(arg) {}
 
 // but
-const function g() {}
+const function g(arg) {}
 // is equivalent to
-const g: function = function() {}
+const g: function = function(arg) {}
 ```
 
 Use names in the parentisis for arguments. Use `:` to signify the type of an argument and `=` for the default value:
@@ -215,7 +211,7 @@ Use names in the parentisis for arguments. Use `:` to signify the type of an arg
 function(arg_1, arg_2: number, arg_3: number = 5) {}
 ```
 
-Use `return` to return a value and `:` to signify the return type:
+Use `return` to return a value and `:` after the argument list to signify the return type:
 ```
 function add(a: number, b: number): number {
     return a + b
@@ -223,6 +219,11 @@ function add(a: number, b: number): number {
 ```
 
 All functions return `null` by default.
+
+Functions whith zero arguments don't actualy exist - you can create one but it will just evaluate to its return value:
+```
+function() {return 5} == 5
+```
 
 You can create an operator with `operator` instead of `function`. Operators work the same, bat can be called with the first argument before the function instead of after it.
 
@@ -275,13 +276,6 @@ function(type: Any) {
 ```
 This also how `...` works internaly.
 
-Functions with no arguments actualy expect a single argument of type `null` (which is what `()` evaluates to).
-```
-function() {}
-// is equivalent to
-function(_: null) {}
-```
-
 ## Pure functions
 Pure functions are functions that:
 1. Don't affect the rest of the program other than returning a value.
@@ -292,7 +286,7 @@ All functions in Phi are pure functions.
 This means that when you are creating a function all variables created outside of the function work like constants:
 ```
 var a: number = 5
-function f() {
+function f(arg) {
     return a
 }
 f()  // returns 5
@@ -303,7 +297,7 @@ f()  // still returns 5
 It also means that functions can't change variables created outside of the function:
 ```
 var a: number = 5
-function f() {
+function f(arg) {
     a += 1  // throws an error
 }
 ```
@@ -312,14 +306,14 @@ So in order to have methods that act on objects in-place you need to use `=` or 
 ```
 var a: list<number> = [1, 2, 3]
 list            // is [1, 2, 3]
-list.remove(2)  // returns a new list [1, 3], but doesn't modify the orginal
+list.reversed   // returns a new list [3, 2, 1], but doesn't modify the orginal
 list            // still [1, 2, 3]
-// to remove an element you need to use `=`
-list = list.remove(2)  // or
-list = _.remove(2)     // or
-list.=remove(2)
+// to reverse the list you need to use `=`
+list = list.reversed   // or
+list = _.reversed      // or
+list.=reversed
 
-list // will now be [1, 3]
+list // will now be [3, 2, 1]
 ```
 
 But everything is a function, including `=` so how does it work? The answer is: it takes the rest of the code as an argument and modifies the variable there:
@@ -369,13 +363,3 @@ function open_file(path: string, flags: Flags<read, write, create, erase>, ...) 
 
 open_file("file.txt", read, create) // will print "The file is readable" and "If there is no file with this name, create a new one", but nothing else.
 ```
-
-## Code blocks
-`{}` can be used to create a function directly:
-```
-function f() {`some code`}
-// is equivalent to
-var f: function = {`some code`}
-```
-
-`{}` by default gives `CodeBlock` object instead of `function` which works a little bit differently. // INCLUDE EXAMPLES
